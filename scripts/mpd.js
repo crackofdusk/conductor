@@ -10,17 +10,19 @@
  *
  */
 
-define(['lib/websock'], function (Websock) {
+define(['lib/websock', 'logger'], function (Websock, Logger) {
 
     function MPD(host, port) {
-        var that = this;
+        var self = this;
 
         this.socketURI = 'ws://' + host + ":" + port;
         this.socket = new Websock();
 
-        this.socket.on('open', function() { that._idle()});
+        this.socket.on('open', function() { self.isIdle = true; self._idle()});
         this.socket.on('error', function(e) { throw e });
-        this.socket.on('message', function() { that._handleMessage() });
+        this.socket.on('message', function() { self._handleMessage() });
+
+        this.logger = new Logger("debug");
     }
 
     MPD.prototype = {
@@ -31,6 +33,7 @@ define(['lib/websock'], function (Websock) {
         callbacks: [],
         commands: [],
         version: "0",
+        isIdle: false,
 
         connect: function() {
             this.socket.open(this.socketURI);
@@ -43,16 +46,32 @@ define(['lib/websock'], function (Websock) {
 
         // TODO: handle closed socket
         send: function(command, callback) {
-            var cb = callback;
+            var cb = callback,
+                self = this;
 
             if(typeof cb !== "function") {
+                self.logger.debug("No callback given, using noop.");
                 var cb = function() { /* noop */};
             }
 
-            this._noidle();
-            this.callbacks.push(cb);
-            this._write(command);
-            this._idle();
+            var _send = function() {
+                self.callbacks.push(function(data) {
+                    cb(data);
+                    self.isIdle = true;
+                    self._idle();
+                });
+
+                self._write(command);
+            }
+
+            if(self.isIdle) {
+                self.isIdle = false;
+                self._write("noidle");
+                _send();
+            } else {
+                _send();
+            }
+
         },
 
         _handleMessage: function() {
@@ -113,14 +132,27 @@ define(['lib/websock'], function (Websock) {
             this.socket.send_string(command + "\n")
         },
 
+        _handleUpdate: function(data) {
+            if(data.changed) {
+                this.logger.debug("New " + data.changed + " status");
+            }
+        },
+
         _idle: function() {
-            this.callbacks.push(function() { /* noop */ });
+            var self = this;
+
+            this.callbacks.push(function(data) {
+                self._handleUpdate(data);
+
+                // Make sure to not short-circuit the sending of a command
+                if (self.isIdle) {
+                    self._idle();
+                }
+            });
+            self.logger.debug("Idling...")
             this._write("idle");
         },
 
-        _noidle: function() {
-            this._write("noidle");
-        },
     }
 
 
