@@ -18,7 +18,13 @@ define(['lib/websock', 'logger'], function (Websock, Logger) {
         this.socketURI = 'ws://' + host + ":" + port;
         this.socket = new Websock();
 
-        this.socket.on('open', function() { self.idling = true; self._idle()});
+        this.socket.on('open', function() {
+            self.getStatus();
+            self.getPlaylist();
+
+            self.idling = true;
+            self._idle()
+        });
         this.socket.on('error', function(e) { throw e });
         this.socket.on('message', function() { self._handleMessage() });
 
@@ -36,16 +42,24 @@ define(['lib/websock', 'logger'], function (Websock, Logger) {
         idling: false,
 
         updateHandlers: {
-            player: function(self) {
-                self.send("status", function(data) {
-                    self.emit('status', data);
-                })
-            },
-            playlist: function(self) {
-                self.send("playlistinfo", function(data) {
-                    self.emit('playlist', data);
-                })
-            }
+            player: this.getStatus,
+            playlist: this.getPlaylist,
+        },
+
+        getStatus: function() {
+            var self = this;
+
+            self.send("status", function(data) {
+                self.emit('status', data);
+            })
+        },
+
+        getPlaylist: function() {
+            var self = this;
+
+            self.send("playlistinfo", function(data) {
+                self.emit('playlist', data);
+            })
         },
 
         emit: function (event) {
@@ -86,7 +100,7 @@ define(['lib/websock', 'logger'], function (Websock, Logger) {
 
             if(typeof cb !== "function") {
                 self.logger.debug("No callback given, using noop.");
-                var cb = function() { /* noop */};
+                var cb = noop;
             }
 
             var _send = function() {
@@ -168,10 +182,13 @@ define(['lib/websock', 'logger'], function (Websock, Logger) {
         },
 
         _update: function(data) {
-            if(!data.changed) return;
-
-            this.logger.debug("New " + data.changed + " status");
-            this.updateHandlers[data.changed](this);
+            if(data.changed) {
+                this.logger.debug("New " + data.changed + " status");
+                this.updateHandlers[data.changed](this);
+            } else {
+                // The playlist has most likely changed (playlist editing, consume mode, etc.)
+                this.updateHandlers.playlist(this);
+            }
         },
 
         _idle: function() {
@@ -190,6 +207,8 @@ define(['lib/websock', 'logger'], function (Websock, Logger) {
         },
 
     }
+
+    function noop() {}
 
     // TODO: make user configurable
     var mpd = new MPD("localhost", 9000);
