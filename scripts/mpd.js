@@ -60,7 +60,7 @@ define(['lib/websock', 'logger'], function (Websock, Logger) {
             self.send("playlistinfo", function(data) {
                 self.logger.debug(data);
 
-                if(!Array.isArray(data) && !data.file) return;
+                if(!data[0] && !data.file) return;
 
                 if(data.file) {
                     data = [data];
