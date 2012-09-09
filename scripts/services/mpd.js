@@ -4,15 +4,18 @@ define(['services/services', 'mpd'], function(services, MPD) {
 
         var handlers = [];
 
-        MPD.updateHandler = function(change) {
-            if(handlers[change]) {
-                handlers[change]();
-            }
+        MPD.updateHandler = function(event) {
+            if(!handlers[event]) return;
+
+            handlers[event].forEach(function(handler) {
+                handler();
+            })
         }
 
         return {
-            on: function(eventName, callback) {
-                handlers[eventName] = callback;
+            on: function(event, fn) {
+                handlers[event] || (handlers[event] = []);
+                handlers[event].push(fn);
             },
 
             set: function(command) {

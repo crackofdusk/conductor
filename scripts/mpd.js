@@ -144,6 +144,8 @@ define(['lib/websock', 'logger'], function (Websock, Logger) {
             var self = this;
 
             this.callbacks.push(function(data) {
+                self.logger.debug("Result of idling:");
+                self.logger.debug(data);
                 self._handleUpdate(data);
 
                 // Make sure to not short-circuit the sending of a command
