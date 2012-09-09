@@ -58,6 +58,14 @@ define(['lib/websock', 'logger'], function (Websock, Logger) {
             var self = this;
 
             self.send("playlistinfo", function(data) {
+                self.logger.debug(data);
+
+                if(!Array.isArray(data) && !data.file) return;
+
+                if(data.file) {
+                    data = [data];
+                }
+
                 self.emit('playlist', data);
             })
         },
@@ -158,9 +166,11 @@ define(['lib/websock', 'logger'], function (Websock, Logger) {
                     if (!isList) {
                         if (typeof(response[attr]) != 'undefined') {
                             //make ordered list
-                            response = [];
+                            var tempResponse = [];
+                            tempResponse[i] = response;
+                            response = tempResponse;
                             isList = true;
-                            response[i] = {};
+                            response[++i] = {};
                             response[i][attr] = value;
                         } else {
                             response[attr] = value;
