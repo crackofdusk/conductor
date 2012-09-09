@@ -19,13 +19,10 @@ define(['lib/websock', 'logger'], function (Websock, Logger) {
         this.socket = new Websock();
 
         this.socket.on('open', function() {
-            self.getPlaylist();
-            /*
-            self.getStatus();
-            self.getPlaylist();
             self.idling = true;
-            self._idle()
-            */
+            self._idle();
+
+            self.emit('connect');
         });
         this.socket.on('error', function(e) { throw e });
         this.socket.on('message', function() { self._handleMessage() });
@@ -51,6 +48,8 @@ define(['lib/websock', 'logger'], function (Websock, Logger) {
         getStatus: function() {
             var self = this;
 
+            self.logger.debug("Getting status.");
+
             self.send("status", function(data) {
                 self.emit('status', data);
             })
@@ -58,6 +57,8 @@ define(['lib/websock', 'logger'], function (Websock, Logger) {
 
         getPlaylist: function() {
             var self = this;
+
+            self.logger.debug("Getting playlist.");
 
             self.send("playlistinfo", function(data) {
                 self.logger.debug(data);
@@ -195,7 +196,7 @@ define(['lib/websock', 'logger'], function (Websock, Logger) {
 
         _update: function(data) {
             if(data.changed) {
-                this.logger.debug("New " + data.changed + " status");
+                    this.logger.debug("New " + data.changed + " status");
                 this.updateHandlers[data.changed]();
             } else {
                 // The playlist has most likely changed (playlist editing, consume mode, etc.)

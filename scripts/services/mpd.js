@@ -12,14 +12,16 @@ define(['services/services', 'mpd'], function(services, MPD) {
                 });
             },
 
-            set: function(command) {
-                MPD.send(command);
+            requestStatus: function() {
+                MPD.getStatus();
             },
 
-            get: function(command, callback) {
-                $rootScope.$apply(function() {
-                    MPD.send(command, callback);
-                })
+            requestPlaylist: function() {
+                MPD.getPlaylist();
+            },
+
+            set: function(command) {
+                MPD.send(command);
             },
 
 
