@@ -24,7 +24,7 @@ define(['lib/websock', 'logger'], function (Websock, Logger) {
 
             self.emit('connect');
         });
-        this.socket.on('error', function(e) { throw e });
+        this.socket.on('error', function(e) { self.logger.error(e); });
         this.socket.on('message', function() { self._handleMessage() });
 
         this.logger = new Logger("debug");
@@ -146,6 +146,8 @@ define(['lib/websock', 'logger'], function (Websock, Logger) {
             data = this.socket.rQshiftStr();
             lines = data.split("\n");
 
+            this.logger.debug(data);
+
             for (l in lines) {
                 if (lines[l].match(/^ACK/)) {
                     response = lines[l].substr(10);
@@ -196,11 +198,12 @@ define(['lib/websock', 'logger'], function (Websock, Logger) {
 
         _update: function(data) {
             if(data.changed) {
-                    this.logger.debug("New " + data.changed + " status");
+                this.logger.debug("New " + data.changed + " status");
                 this.updateHandlers[data.changed]();
             } else {
                 // The playlist has most likely changed (playlist editing, consume mode, etc.)
-                this.updateHandlers.playlist();
+                this.getStatus();
+                this.getPlaylist();
             }
         },
 

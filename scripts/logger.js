@@ -11,17 +11,21 @@ define([], function() {
         },
 
         info: function(message) {
-            this._write("debug", message);
+            this._write("info", message);
         },
 
         warn: function(message) {
-            this._write("debug", message);
+            this._write("warn", message);
+        },
+
+        error: function(message) {
+            this._write("error", message);
         },
 
         _write: function(level, message) {
-            if(this.levels.indexOf(level) >= this.levels.indexOf(this.level)) {
-                console.log(message);
-            }
+            if(this.levels.indexOf(level) < this.levels.indexOf(this.level)) return;
+
+            console[level](message);
         }
     }
 
