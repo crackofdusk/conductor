@@ -2,20 +2,14 @@ define(['services/services', 'mpd'], function(services, MPD) {
 
     services.factory('mpd', ['$rootScope', function($rootScope) {
 
-        var handlers = [];
-
-        MPD.updateHandler = function(event) {
-            if(!handlers[event]) return;
-
-            handlers[event].forEach(function(handler) {
-                handler();
-            })
-        }
-
         return {
-            on: function(event, fn) {
-                handlers[event] || (handlers[event] = []);
-                handlers[event].push(fn);
+            on: function (event, callback) {
+                MPD.on(event, function () {
+                    var args = arguments;
+                    $rootScope.$apply(function () {
+                        callback.apply(null, args);
+                    });
+                });
             },
 
             set: function(command) {
