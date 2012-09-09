@@ -19,13 +19,21 @@ define(['lib/websock', 'logger'], function (Websock, Logger) {
         this.socket = new Websock();
 
         this.socket.on('open', function() {
+            self.connected = true;
+
             self.idling = true;
             self._idle();
 
             self.emit('connect');
         });
-        this.socket.on('error', function(e) { self.logger.error(e); });
-        this.socket.on('message', function() { self._handleMessage() });
+
+        this.socket.on('close', function() {
+            self.connected = false;
+            self.emit('disconnect');
+        });
+
+        this.socket.on('error', self.logger.error);
+        this.socket.on('message', self._handleMessage);
 
         this.logger = new Logger("debug");
 
@@ -43,6 +51,7 @@ define(['lib/websock', 'logger'], function (Websock, Logger) {
         callbacks: [],
         events: [],
         version: "0",
+        connected: false,
         idling: false,
 
         getStatus: function() {
