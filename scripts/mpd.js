@@ -15,6 +15,8 @@ define(['lib/websock', 'logger'], function (Websock, Logger) {
     function MPD(host, port) {
         var self = this;
 
+        this.logger = new Logger("debug");
+
         this.socketURI = 'ws://' + host + ":" + port;
         this.socket = new Websock();
 
@@ -33,9 +35,7 @@ define(['lib/websock', 'logger'], function (Websock, Logger) {
         });
 
         this.socket.on('error', self.logger.error);
-        this.socket.on('message', self._handleMessage);
-
-        this.logger = new Logger("debug");
+        this.socket.on('message', function() { self._handleMessage() });
 
         this.updateHandlers = {
             player: this.getStatus.bind(this),
