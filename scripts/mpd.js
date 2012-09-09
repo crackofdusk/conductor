@@ -19,16 +19,23 @@ define(['lib/websock', 'logger'], function (Websock, Logger) {
         this.socket = new Websock();
 
         this.socket.on('open', function() {
+            self.getPlaylist();
+            /*
             self.getStatus();
             self.getPlaylist();
-
             self.idling = true;
             self._idle()
+            */
         });
         this.socket.on('error', function(e) { throw e });
         this.socket.on('message', function() { self._handleMessage() });
 
         this.logger = new Logger("debug");
+
+        this.updateHandlers = {
+            player: this.getStatus.bind(this),
+            playlist: this.getPlaylist.bind(this),
+        };
     }
 
     MPD.prototype = {
@@ -40,11 +47,6 @@ define(['lib/websock', 'logger'], function (Websock, Logger) {
         events: [],
         version: "0",
         idling: false,
-
-        updateHandlers: {
-            player: this.getStatus,
-            playlist: this.getPlaylist,
-        },
 
         getStatus: function() {
             var self = this;
@@ -194,10 +196,10 @@ define(['lib/websock', 'logger'], function (Websock, Logger) {
         _update: function(data) {
             if(data.changed) {
                 this.logger.debug("New " + data.changed + " status");
-                this.updateHandlers[data.changed](this);
+                this.updateHandlers[data.changed]();
             } else {
                 // The playlist has most likely changed (playlist editing, consume mode, etc.)
-                this.updateHandlers.playlist(this);
+                this.updateHandlers.playlist();
             }
         },
 
