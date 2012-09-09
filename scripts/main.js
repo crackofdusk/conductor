@@ -9,12 +9,17 @@ requirejs.config({
         },
         'lib/base64': {
             exports: 'Base64'
-        }
+        },
+        'lib/angular': {
+            exports: 'angular'
+        },
     }
 });
 
-require(['mpd'], function(MPD) {
-    var mpd = new MPD("localhost", 9000);
-    mpd.connect();
-    window.mpd = mpd;
+require([
+        'app',
+        'controllers/status',
+        'controllers/playlist',
+        ],function(app) {
+            app.run();
 });

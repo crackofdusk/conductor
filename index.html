@@ -1,11 +1,20 @@
 <!DOCTYPE html>
-
-<html>
+<html ng-app="conductor">
     <head>
         <title>Conductor</title>
         <script data-main="scripts/main" src="scripts/lib/require.js"></script>
     </head>
 
     <body>
+        <section ng-controller="status">
+            {{ status.state }}
+        </section>
+        <section ng-controller="playlist">
+        <ol>
+            <li ng-repeat="item in items">
+                {{ item.Title }}
+            </li>
+        </ol>
+        </section>
     </body>
 </html>

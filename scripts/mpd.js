@@ -34,6 +34,7 @@ define(['lib/websock', 'logger'], function (Websock, Logger) {
         commands: [],
         version: "0",
         isIdle: false,
+        updateHandler: function() {},
 
         connect: function() {
             this.socket.open(this.socketURI);
@@ -135,6 +136,7 @@ define(['lib/websock', 'logger'], function (Websock, Logger) {
         _handleUpdate: function(data) {
             if(data.changed) {
                 this.logger.debug("New " + data.changed + " status");
+                this.updateHandler(data.changed);
             }
         },
 
@@ -155,7 +157,11 @@ define(['lib/websock', 'logger'], function (Websock, Logger) {
 
     }
 
+    // TODO: make user configurable
+    var mpd = new MPD("localhost", 9000);
+    mpd.connect();
 
-    return MPD;
+    // A singleton, because it makes more sense for websocket I/O.
+    return mpd;
 
 });
